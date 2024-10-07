@@ -1,0 +1,74 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+
+np.random.seed(42)
+X = np.linspace(0, 10, 1000).reshape(-1, 1)
+y = np.sin(X).ravel() + np.random.normal(0, 0.2, X.shape[0])
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='blue', alpha=0.6)
+plt.xlabel('X')
+plt.ylabel('y')
+plt.title('Початкові дані')
+plt.grid()
+plt.show()
+
+scaler = StandardScaler()
+X_normalized = scaler.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(X_normalized, y, test_size=0.3, random_state=42)
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X_train, y_train, color='orange', alpha=0.6, label='Навчальна вибірка')
+plt.scatter(X_test, y_test, color='red', alpha=0.6, label='Тестова вибірка')
+plt.xlabel('Normalized X')
+plt.ylabel('y')
+plt.title('Навчальна та тестова вибірки')
+plt.legend()
+plt.grid()
+plt.show()
+
+k_values = [3, 5, 7, 10, 17]
+errors = []
+
+for k in k_values:
+    knn = KNeighborsRegressor(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    errors.append(mse)
+
+best_k = k_values[np.argmin(errors)]
+print(f"Найкраще значення K: {best_k}")
+
+knn_best = KNeighborsRegressor(n_neighbors=best_k)
+knn_best.fit(X_train, y_train)
+y_best_pred = knn_best.predict(X_test)
+
+r2 = r2_score(y_test, y_best_pred)
+mse_best = mean_squared_error(y_test, y_best_pred)
+
+print(f"R2 Score для оптимального K: {r2}")
+print(f"Mean Squared Error для оптимального K: {mse_best}")
+
+plt.figure(figsize=(10, 6))
+plt.plot(k_values, errors, marker='o', linestyle='--', color='b')
+plt.xlabel('K')
+plt.ylabel('Mean Squared Error')
+plt.title('Помилка в залежності від K')
+plt.grid()
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X_test, y_test, color='black', label='Справжні значення')
+plt.scatter(X_test, y_best_pred, color='red', alpha=0.5, label='Передбачені значення (KNN)')
+plt.xlabel('X')
+plt.ylabel('y')
+plt.title('Справжні та передбачені значення')
+plt.legend()
+plt.grid()
+plt.show()
