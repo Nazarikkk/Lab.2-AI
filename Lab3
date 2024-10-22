@@ -1,0 +1,119 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+
+# Завантаження датасету
+file_path = 'IrisData_full.csv'
+iris_data = pd.read_csv(file_path)
+
+# Кодування міток (Iris-setosa, Iris-versicolor, Iris-virginica) в числовий формат
+le = LabelEncoder()
+iris_data.iloc[:, -1] = le.fit_transform(iris_data.iloc[:, -1])
+
+# Приведення міток до типу int
+iris_data.iloc[:, -1] = iris_data.iloc[:, -1].astype(int)
+
+# Візуалізація до перемішування (кольорова схема 'plasma')
+plt.figure(figsize=(7, 5))
+plt.scatter(iris_data.iloc[:, 0], iris_data.iloc[:, 1], c=iris_data.iloc[:, -1], cmap='plasma')
+plt.title('Дані до перемішування', fontsize=14)
+plt.xlabel('Ознака 1', fontsize=12)
+plt.ylabel('Ознака 2', fontsize=12)
+plt.grid(True)
+plt.show()
+
+# Перемішування датасету
+iris_data = iris_data.sample(frac=1, random_state=42).reset_index(drop=True)
+
+# Візуалізація після перемішування (кольорова схема 'coolwarm')
+plt.figure(figsize=(7, 5))
+plt.scatter(iris_data.iloc[:, 0], iris_data.iloc[:, 1], c=iris_data.iloc[:, -1], cmap='coolwarm')
+plt.title('Дані після перемішування', fontsize=14)
+plt.xlabel('Ознака 1', fontsize=12)
+plt.ylabel('Ознака 2', fontsize=12)
+plt.grid(True)
+plt.show()
+
+# Виділення ознак і міток
+X = iris_data.iloc[:, :-1]
+y = iris_data.iloc[:, -1]
+
+# Розбиття на тренувальну і тестову вибірки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Приведення міток до типу int
+y_train = y_train.astype(int)
+y_test = y_test.astype(int)
+
+# Візуалізація навчальної вибірки (кольорова схема 'spring')
+plt.figure(figsize=(7, 5))
+plt.scatter(X_train.iloc[:, 0], X_train.iloc[:, 1], c=y_train, cmap='spring')
+plt.title('Навчальна вибірка', fontsize=14)
+plt.xlabel('Ознака 1', fontsize=12)
+plt.ylabel('Ознака 2', fontsize=12)
+plt.grid(True)
+plt.show()
+
+# Візуалізація тестової вибірки (кольорова схема 'autumn')
+plt.figure(figsize=(7, 5))
+plt.scatter(X_test.iloc[:, 0], X_test.iloc[:, 1], c=y_test, cmap='autumn')
+plt.title('Тестова вибірка', fontsize=14)
+plt.xlabel('Ознака 1', fontsize=12)
+plt.ylabel('Ознака 2', fontsize=12)
+plt.grid(True)
+plt.show()
+
+# Нормалізація ознак
+scaler = StandardScaler()
+X_train_normalized = scaler.fit_transform(X_train)
+X_test_normalized = scaler.transform(X_test)
+
+# Візуалізація нормалізованих навчальних даних (кольорова схема 'cubehelix')
+plt.figure(figsize=(7, 5))
+plt.scatter(X_train_normalized[:, 0], X_train_normalized[:, 1], c=y_train, cmap='cubehelix')
+plt.title('Нормалізовані навчальні дані', fontsize=14)
+plt.xlabel('Нормалізована ознака 1', fontsize=12)
+plt.ylabel('Нормалізована ознака 2', fontsize=12)
+plt.grid(True)
+plt.show()
+
+# Візуалізація нормалізованих тестових даних (кольорова схема 'Wistia')
+plt.figure(figsize=(7, 5))
+plt.scatter(X_test_normalized[:, 0], X_test_normalized[:, 1], c=y_test, cmap='Wistia')
+plt.title('Нормалізовані тестові дані', fontsize=14)
+plt.xlabel('Нормалізована ознака 1', fontsize=12)
+plt.ylabel('Нормалізована ознака 2', fontsize=12)
+plt.grid(True)
+plt.show()
+
+# Тренування та оцінка KNN-класифікатора для різних значень K
+accuracies = []
+k_values = range(1, 11)
+for k in k_values:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train_normalized, y_train)
+
+    # Прогнозування для тестової вибірки
+    y_pred = knn.predict(X_test_normalized)
+
+    # Обчислення точності
+    accuracy = accuracy_score(y_test, y_pred)
+    accuracies.append(accuracy)
+
+# Визначення найкращого значення K
+best_k = k_values[np.argmax(accuracies)]
+print(f'Найкраще значення K: {best_k}, Точність: {accuracies[np.argmax(accuracies)]}')
+
+# Відображення графіку точності залежно від кількості сусідів (кольорова схема 'darkblue')
+plt.figure(figsize=(10, 5))
+plt.plot(k_values, accuracies, marker='x', color='darkblue', label='Точність')
+plt.xlabel('K (кількість сусідів)', fontsize=12)
+plt.ylabel('Точність', fontsize=12)
+plt.title('Залежність точності від кількості сусідів K для KNN-класифікатора', fontsize=14)
+plt.grid(True, linestyle='--')
+plt.legend()
+plt.show()
